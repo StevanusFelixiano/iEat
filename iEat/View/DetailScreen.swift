@@ -59,15 +59,7 @@ struct DetailScreen: View {
 
                         // Open Status
 
-                        Text("Open · \(closingTime)")
-                            .font(.system(size: 16, weight: .semibold))
-                            .foregroundStyle(.white)
-                            .padding(.horizontal, 17)
-                            .padding(.vertical, 12)
-                            .background(
-                                Capsule()
-                                    .fill(Color.green)
-                            )
+                        StatusBadge(closingTime: closingTime)
                             .frame(
                                 maxWidth: .infinity,
                                 alignment: .trailing
@@ -99,31 +91,10 @@ struct DetailScreen: View {
 
                         // Rating
 
-                        HStack(spacing: 5) {
-
-                            ForEach(0..<5, id: \.self) { _ in
-
-                                Image(systemName: "star.fill")
-                                    .font(.system(size: 8))
-                                    .foregroundStyle(.orange)
-                            }
-
-                            Text(
-                                place.rating.map {
-                                    String(format: "%.1f", $0)
-                                } ?? "-"
-                            )
-                            .font(.system(size: 16, weight: .semibold))
-                            .padding(.leading, 7)
-
-                            Text(
-                                place.reviewCount.map {
-                                    "· \($0) reviews"
-                                } ?? "· No reviews"
-                            )
-                            .font(.system(size: 16))
-                            .foregroundStyle(.gray)
-                        }
+                        RatingView(
+                            rating: place.rating,
+                            reviewCount: place.reviewCount
+                        )
                         .padding(.top, 16)
                         .padding(.leading, 5)
 
@@ -156,26 +127,11 @@ struct DetailScreen: View {
 
                         // Address
 
-                        HStack(alignment: .top, spacing: 16) {
-
-                            Image(systemName: "mappin.circle.fill")
-                                .font(.system(size: 20))
-                                .foregroundStyle(.orange)
-                                .padding(.top, 11)
-
-                            VStack(alignment: .leading, spacing: 5) {
-
-                                Text("Address")
-                                    .font(.system(size: 15))
-                                    .foregroundStyle(.gray)
-
-                                Text(place.address)
-                                    .font(.system(size: 16))
-                                    .foregroundStyle(.primary)
-                            }
-
-                            Spacer()
-                        }
+                        PlaceInfo(
+                            icon: "mappin.circle.fill",
+                            title: "Address",
+                            value: place.address
+                        )
 
                         Divider()
                             .padding(.leading, 36)
@@ -183,29 +139,11 @@ struct DetailScreen: View {
 
                         // Hours
 
-                        HStack(alignment: .top, spacing: 16) {
-
-                            Image(systemName: "clock")
-                                .font(.system(size: 20))
-                                .foregroundStyle(.orange)
-                                .padding(.top, 11)
-
-                            VStack(alignment: .leading, spacing: 5) {
-
-                                Text("Hours")
-                                    .font(.system(size: 15))
-                                    .foregroundStyle(.gray)
-
-                                Text(
-                                    place.openingHours
-                                    ?? "Hours unavailable"
-                                )
-                                .font(.system(size: 16))
-                                .foregroundStyle(.primary)
-                            }
-
-                            Spacer()
-                        }
+                        PlaceInfo(
+                            icon: "clock",
+                            title: "Hours",
+                            value: place.openingHours ?? "Hours unavailable"
+                        )
                     }
                     .padding(.horizontal, 24)
                     .padding(.vertical, 18)

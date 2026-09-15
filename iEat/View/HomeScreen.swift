@@ -10,6 +10,7 @@ import SwiftUI
 struct HomeScreen: View {
 
     @StateObject private var manager = CulinaryManager()
+    @State private var customCraving = ""
 
     let columns = [
         GridItem(.flexible(), spacing: 16),
@@ -29,24 +30,9 @@ struct HomeScreen: View {
 
                     // MARK: Location
 
-                    HStack(spacing: 8) {
-
-                        Image(systemName: "mappin.and.ellipse")
-                            .font(.system(size: 10, weight: .semibold))
-                            .foregroundStyle(.gray)
-
-                        Text("Menteng, Jakarta")
-                            .font(.system(size: 12, weight: .medium))
-                            .foregroundStyle(.gray)
-                    }
-                    .padding(.horizontal, 16)
-                    .padding(.vertical, 10)
-                    .background(
-                        Capsule()
-                            .fill(Color(.systemGray6))
-                    )
-                    .padding(.top, 20)
-                    .padding(.leading, 10)
+                    LocationPill(location: "Menteng, Jakarta")
+                        .padding(.top, 20)
+                        .padding(.leading, 10)
 
                     // MARK: Header
 
@@ -94,6 +80,16 @@ struct HomeScreen: View {
                         .foregroundStyle(.gray)
                         .padding(.top, 10)
                         .padding(.leading, 14)
+                    
+                    // MARK: Custom Craving
+
+                    CravingField(text: $customCraving) { preference in
+                        manager.selectCraving(preference)
+                    }
+                    .padding(.top, 20)
+                    .padding(.leading, 10)
+                    .padding(.trailing, 10)
+                    .padding(.bottom, -8)
 
                     // MARK: Cravings
 
@@ -104,8 +100,7 @@ struct HomeScreen: View {
                             CravingCard(
                                 emoji: craving.emoji,
                                 title: craving.name
-                            )
-                            .onTapGesture {
+                            ){
                                 manager.selectCraving(craving)
                             }
                         }
@@ -125,54 +120,6 @@ struct HomeScreen: View {
                 .padding(.horizontal, 10)
             }
         }
-    }
-}
-
-// MARK: - Craving Card
-
-struct CravingCard: View {
-
-    let emoji: String
-    let title: String
-
-    var body: some View {
-
-        Button {
-
-            // Handle craving selection
-
-        } label: {
-
-            VStack(alignment: .leading, spacing: 0) {
-
-                Text(emoji)
-                    .font(.system(size: 36))
-                    .frame(height: 65)
-                    .padding(.bottom, -10)
-
-                Spacer()
-
-                Text(title)
-                    .font(.system(size: 20, weight: .semibold))
-                    .foregroundStyle(.primary)
-                    .padding(.bottom, 15)
-            }
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .frame(height: 80)
-            .padding(.horizontal, 20)
-            .padding(.vertical, 20)
-            .background(
-                RoundedRectangle(cornerRadius: 28)
-                    .fill(Color(.systemBackground))
-                    .shadow(
-                        color: .black.opacity(0.07),
-                        radius: 12,
-                        x: 0,
-                        y: 5
-                    )
-            )
-        }
-        .buttonStyle(.plain)
     }
 }
 
