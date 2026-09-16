@@ -13,7 +13,13 @@ import CoreLocation
 final class CulinaryManager: NSObject, ObservableObject {
 
     @Published var selectedCraving: FoodPreference?
+
+    // Final results shown by ExploreScreen
     @Published var places: [Place] = []
+
+    // All results returned by MapKit
+    private var allPlaces: [Place] = []
+
     @Published var isSearching = false
     @Published var errorMessage: String?
     @Published var locationName = "Finding location..."
@@ -22,6 +28,12 @@ final class CulinaryManager: NSObject, ObservableObject {
 
     private var currentSearch: MKLocalSearch?
     private var hasReceivedLocation = false
+
+    // MARK: - Active Filters
+
+    private var selectedDistance: Double = 5
+    private var selectedRating: Double? = nil
+    private var openNow = false
 
     override init() {
         super.init()
@@ -50,42 +62,46 @@ final class CulinaryManager: NSObject, ObservableObject {
             locationName = "Location unavailable"
         }
     }
-    
+
     func refreshLocation() {
+
         hasReceivedLocation = false
         locationManager.startUpdatingLocation()
     }
 
     private func handleLocation(_ location: CLLocation) {
 
-        // Only use the first location
         guard !hasReceivedLocation else {
             return
         }
 
         hasReceivedLocation = true
 
-        // We only need the user's initial location
         locationManager.stopUpdatingLocation()
 
         Task {
+
             do {
 
                 guard let request = MKReverseGeocodingRequest(
                     location: location
                 ) else {
+
                     await MainActor.run {
                         self.locationName = "Location unavailable"
                     }
+
                     return
                 }
 
                 let mapItems = try await request.mapItems
 
                 guard let mapItem = mapItems.first else {
+
                     await MainActor.run {
                         self.locationName = "Location unavailable"
                     }
+
                     return
                 }
 
@@ -120,6 +136,7 @@ final class CulinaryManager: NSObject, ObservableObject {
     func searchPlaces(for craving: FoodPreference) {
 
         guard let coordinate = locationManager.location?.coordinate else {
+
             errorMessage = "Location is not available yet."
             return
         }
@@ -166,7 +183,9 @@ final class CulinaryManager: NSObject, ObservableObject {
 
                 await MainActor.run {
 
-                    self.places = sortedResults
+                    self.allPlaces = sortedResults
+                    self.applyFilters()
+
                     self.isSearching = false
                     self.currentSearch = nil
                 }
@@ -175,13 +194,166 @@ final class CulinaryManager: NSObject, ObservableObject {
 
                 await MainActor.run {
 
+                    self.allPlaces = []
                     self.places = []
+
                     self.isSearching = false
                     self.errorMessage = error.localizedDescription
                     self.currentSearch = nil
                 }
             }
         }
+    }
+
+    // MARK: - Filters
+
+    func applyFilters(
+        distance: String,
+        rating: String,
+        openNow: Bool
+    ) {
+
+        selectedDistance = distanceValue(from: distance)
+        selectedRating = ratingValue(from: rating)
+        self.openNow = openNow
+
+        applyFilters()
+    }
+
+    private func applyFilters() {
+
+        let maxDistance = selectedDistance * 1000
+
+        places = allPlaces.filter { place in
+
+            // Distance
+            guard place.distance <= maxDistance else {
+                return false
+            }
+
+            // Rating
+            if let minimumRating = selectedRating {
+
+                guard let rating = place.rating else {
+                    return false
+                }
+
+                guard rating >= minimumRating else {
+                    return false
+                }
+            }
+
+            // Open Now
+            if openNow {
+
+                guard let hours = place.openingHours else {
+                    return false
+                }
+
+                guard isCurrentlyOpen(hours) else {
+                    return false
+                }
+            }
+
+            return true
+        }
+    }
+
+    // MARK: - Distance Filter
+
+    private func distanceValue(from value: String) -> Double {
+
+        switch value {
+
+        case "1 km":
+            return 1
+
+        case "2 km":
+            return 2
+
+        case "5 km":
+            return 5
+
+        case "10 km":
+            return 10
+
+        case "20 km":
+            return 20
+
+        default:
+            return 5
+        }
+    }
+
+    // MARK: - Rating Filter
+
+    private func ratingValue(from value: String) -> Double? {
+
+        switch value {
+
+        case "Any":
+            return nil
+
+        case "3+":
+            return 3
+
+        case "3.5+":
+            return 3.5
+
+        case "4+":
+            return 4
+
+        case "4.5+":
+            return 4.5
+
+        default:
+            return nil
+        }
+    }
+
+    // MARK: - Open Now
+
+    private func isCurrentlyOpen(_ hours: String) -> Bool {
+
+        let times = hours
+            .replacingOccurrences(of: "Daily ", with: "")
+            .components(separatedBy: "–")
+
+        guard times.count == 2 else {
+            return false
+        }
+
+        let formatter = DateFormatter()
+        formatter.dateFormat = "HH:mm"
+
+        guard
+            let openingTime = formatter.date(
+                from: times[0].trimmingCharacters(in: .whitespaces)
+            ),
+            let closingTime = formatter.date(
+                from: times[1].trimmingCharacters(in: .whitespaces)
+            )
+        else {
+            return false
+        }
+
+        let calendar = Calendar.current
+        let now = Date()
+
+        let currentMinutes =
+            calendar.component(.hour, from: now) * 60
+            + calendar.component(.minute, from: now)
+
+        let openingMinutes =
+            calendar.component(.hour, from: openingTime) * 60
+            + calendar.component(.minute, from: openingTime)
+
+        let closingMinutes =
+            calendar.component(.hour, from: closingTime) * 60
+            + calendar.component(.minute, from: closingTime)
+
+        return currentMinutes >= openingMinutes
+            && currentMinutes < closingMinutes
     }
 
     // MARK: - MapItem → Restaurant

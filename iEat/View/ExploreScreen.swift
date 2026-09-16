@@ -12,7 +12,7 @@ struct ExploreScreen: View {
 
     @Environment(\.dismiss) private var dismiss
     @ObservedObject var manager: CulinaryManager
-
+    @State private var showFilters = false
     @State private var isMapView = false
     @State private var mapPosition: MapCameraPosition = .automatic
 
@@ -150,7 +150,7 @@ struct ExploreScreen: View {
 
                         Button {
 
-                            // Open filter
+                            showFilters = true
 
                         } label: {
 
@@ -249,6 +249,19 @@ struct ExploreScreen: View {
             }
         }
         .navigationBarBackButtonHidden(true)
+        .sheet(isPresented: $showFilters) {
+            FilterSheet { distance, rating, openNow in
+
+                manager.applyFilters(
+                    distance: distance,
+                    rating: rating,
+                    openNow: openNow
+                )
+            }
+            .presentationDetents([.large])
+            .presentationDragIndicator(.visible)
+            .presentationCornerRadius(28)
+        }
     }
 
     // MARK: - Helper
