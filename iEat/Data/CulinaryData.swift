@@ -1,11 +1,5 @@
-//
-//  CulinaryData.swift
-//  iEat
-//
-//  Created by Stevanus Felixiano on 15/09/26.
-//
-
 import Foundation
+import MapKit
 
 let cravings: [FoodPreference] = [
     FoodPreference(
@@ -55,6 +49,10 @@ let nasiPadang = Restaurant(
     address: "45 Jalan H. Agus Salim, Sabang",
     distance: 300,
     category: "Rice",
+    coordinate: CLLocationCoordinate2D(
+        latitude: -6.1875,
+        longitude: 106.8283
+    ),
     cuisine: "Minang",
     rating: 4.6,
     reviewCount: 894,

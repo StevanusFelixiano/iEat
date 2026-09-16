@@ -8,9 +8,10 @@
 import SwiftUI
 
 struct HomeScreen: View {
-
+    @Environment(\.scenePhase) private var scenePhase
     @StateObject private var manager = CulinaryManager()
     @State private var customCraving = ""
+    @State private var showExplore = false
 
     let columns = [
         GridItem(.flexible(), spacing: 16),
@@ -19,49 +20,30 @@ struct HomeScreen: View {
 
     var body: some View {
 
-        ZStack {
+        NavigationStack {
 
-            Color(.systemBackground)
-                .ignoresSafeArea()
+            ZStack {
 
-            ScrollView(showsIndicators: false) {
+                Color(.systemBackground)
+                    .ignoresSafeArea()
 
-                VStack(alignment: .leading, spacing: 0) {
+                ScrollView(showsIndicators: false) {
 
-                    // MARK: Location
+                    VStack(alignment: .leading, spacing: 0) {
 
-                    LocationPill(location: "Menteng, Jakarta")
+                        // MARK: Location
+
+                        LocationPill(
+                            location: manager.locationName
+                        )
                         .padding(.top, 20)
                         .padding(.leading, 10)
 
-                    // MARK: Header
+                        // MARK: Header
 
-                    VStack(alignment: .leading, spacing: -4) {
+                        VStack(alignment: .leading, spacing: -4) {
 
-                        Text("What are you")
-                            .font(
-                                .system(
-                                    size: 36,
-                                    weight: .bold,
-                                    design: .serif
-                                )
-                            )
-                            .foregroundStyle(.primary)
-
-                        HStack(spacing: 0) {
-
-                            Text("craving")
-                                .font(
-                                    .system(
-                                        size: 36,
-                                        weight: .bold,
-                                        design: .serif
-                                    )
-                                )
-                                .italic()
-                                .foregroundStyle(Color.orange)
-
-                            Text("?")
+                            Text("What are you")
                                 .font(
                                     .system(
                                         size: 36,
@@ -70,54 +52,93 @@ struct HomeScreen: View {
                                     )
                                 )
                                 .foregroundStyle(.primary)
-                        }
-                    }
-                    .padding(.top, 28)
-                    .padding(.leading, 10)
 
-                    Text("Find something delicious nearby.")
-                        .font(.system(size: 16, weight: .regular))
-                        .foregroundStyle(.gray)
-                        .padding(.top, 10)
-                        .padding(.leading, 14)
-                    
-                    // MARK: Custom Craving
+                            HStack(spacing: 0) {
 
-                    CravingField(text: $customCraving) { preference in
-                        manager.selectCraving(preference)
-                    }
-                    .padding(.top, 20)
-                    .padding(.leading, 10)
-                    .padding(.trailing, 10)
-                    .padding(.bottom, -8)
+                                Text("craving")
+                                    .font(
+                                        .system(
+                                            size: 36,
+                                            weight: .bold,
+                                            design: .serif
+                                        )
+                                    )
+                                    .italic()
+                                    .foregroundStyle(Color.orange)
 
-                    // MARK: Cravings
-
-                    LazyVGrid(columns: columns, spacing: 16) {
-
-                        ForEach(cravings) { craving in
-
-                            CravingCard(
-                                emoji: craving.emoji,
-                                title: craving.name
-                            ){
-                                manager.selectCraving(craving)
+                                Text("?")
+                                    .font(
+                                        .system(
+                                            size: 36,
+                                            weight: .bold,
+                                            design: .serif
+                                        )
+                                    )
+                                    .foregroundStyle(.primary)
                             }
                         }
+                        .padding(.top, 28)
+                        .padding(.leading, 10)
+
+                        Text("Find something delicious nearby.")
+                            .font(.system(size: 16, weight: .regular))
+                            .foregroundStyle(.gray)
+                            .padding(.top, 10)
+                            .padding(.leading, 14)
+
+                        // MARK: Custom Craving
+
+                        CravingField(text: $customCraving) { preference in
+
+                            manager.selectCraving(preference)
+                            showExplore = true
+                        }
+                        .padding(.top, 20)
+                        .padding(.leading, 10)
+                        .padding(.trailing, 10)
+                        .padding(.bottom, -8)
+
+                        // MARK: Cravings
+
+                        LazyVGrid(columns: columns, spacing: 16) {
+
+                            ForEach(cravings) { craving in
+
+                                CravingCard(
+                                    emoji: craving.emoji,
+                                    title: craving.name
+                                ) {
+
+                                    manager.selectCraving(craving)
+                                    showExplore = true
+                                }
+                            }
+                        }
+                        .padding(.top, 44)
+                        .padding(.leading, 10)
+
+                        // MARK: Distance
+
+                        Text("Ready to find your next bite?")
+                            .font(.system(size: 16, weight: .medium))
+                            .foregroundStyle(Color(.systemGray2))
+                            .frame(maxWidth: .infinity)
+                            .padding(.top, 32)
+                            .padding(.bottom, 24)
                     }
-                    .padding(.top, 44)
-                    .padding(.leading, 10)
-
-                    // MARK: Distance
-
-                    Text("Ready to find your next bite?")
-                        .font(.system(size: 16, weight: .medium))
-                        .foregroundStyle(Color(.systemGray2))
-                        .frame(maxWidth: .infinity)
-                        .padding(.top, 32)
-                        .padding(.bottom, 24)
+                    .padding(.horizontal, 10)
                 }
-                .padding(.horizontal, 10)
+            }
+            .navigationDestination(isPresented: $showExplore) {
+                ExploreScreen(manager: manager)
+            }
+        }
+        .onAppear {
+            manager.requestLocationPermission()
+        }
+        .onChange(of: scenePhase) { _, newPhase in
+            if newPhase == .active {
+                manager.refreshLocation()
             }
         }
     }

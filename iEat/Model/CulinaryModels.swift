@@ -6,8 +6,10 @@
 //
 
 import Foundation
+import MapKit
 
 // MARK: - Structure
+
 struct FoodPreference: Identifiable {
     let id = UUID()
     let emoji: String
@@ -16,6 +18,7 @@ struct FoodPreference: Identifiable {
 }
 
 // MARK: - Base Class
+
 class Place: Identifiable {
     let id = UUID()
 
@@ -23,8 +26,10 @@ class Place: Identifiable {
     let address: String
     let distance: Double
     let category: String
+    let coordinate: CLLocationCoordinate2D
 
     // MARK: Optional Values
+
     let rating: Double?
     let reviewCount: Int?
     let phoneNumber: String?
@@ -36,6 +41,7 @@ class Place: Identifiable {
         address: String,
         distance: Double,
         category: String,
+        coordinate: CLLocationCoordinate2D,
         rating: Double? = nil,
         reviewCount: Int? = nil,
         phoneNumber: String? = nil,
@@ -46,6 +52,7 @@ class Place: Identifiable {
         self.address = address
         self.distance = distance
         self.category = category
+        self.coordinate = coordinate
         self.rating = rating
         self.reviewCount = reviewCount
         self.phoneNumber = phoneNumber
@@ -55,6 +62,7 @@ class Place: Identifiable {
 }
 
 // MARK: - Inheritance
+
 class Restaurant: Place {
     let cuisine: String
 
@@ -63,6 +71,7 @@ class Restaurant: Place {
         address: String,
         distance: Double,
         category: String,
+        coordinate: CLLocationCoordinate2D,
         cuisine: String,
         rating: Double? = nil,
         reviewCount: Int? = nil,
@@ -77,6 +86,7 @@ class Restaurant: Place {
             address: address,
             distance: distance,
             category: category,
+            coordinate: coordinate,
             rating: rating,
             reviewCount: reviewCount,
             phoneNumber: phoneNumber,

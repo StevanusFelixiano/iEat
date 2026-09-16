@@ -6,12 +6,15 @@
 //
 
 import SwiftUI
+import MapKit
 
 struct ExploreScreen: View {
 
     @Environment(\.dismiss) private var dismiss
+    @ObservedObject var manager: CulinaryManager
 
-    @StateObject private var manager = CulinaryManager()
+    @State private var isMapView = false
+    @State private var mapPosition: MapCameraPosition = .automatic
 
     var body: some View {
 
@@ -29,15 +32,10 @@ struct ExploreScreen: View {
                     HStack {
 
                         Button {
-
                             dismiss()
-
                         } label: {
-
                             HStack(spacing: 5) {
-
                                 Image(systemName: "chevron.left")
-
                                 Text("Discover")
                             }
                             .font(.system(size: 20, weight: .regular))
@@ -46,38 +44,75 @@ struct ExploreScreen: View {
 
                         Spacer()
 
-                        // List / Map
+                        // MARK: List / Map
 
                         HStack(spacing: 0) {
 
-                            HStack(spacing: 5) {
-
-                                Image(systemName: "line.3.horizontal")
-
-                                Text("List")
+                            Button {
+                                isMapView = false
+                            } label: {
+                                HStack(spacing: 5) {
+                                    Image(systemName: "line.3.horizontal")
+                                    Text("List")
+                                }
+                                .foregroundStyle(
+                                    isMapView
+                                    ? Color(.systemGray)
+                                    : .primary
+                                )
+                                .padding(.horizontal, 12)
+                                .padding(.vertical, 7)
+                                .background(
+                                    RoundedRectangle(cornerRadius: 10)
+                                        .fill(
+                                            isMapView
+                                            ? Color.clear
+                                            : Color(.systemBackground)
+                                        )
+                                        .shadow(
+                                            color: isMapView
+                                            ? .clear
+                                            : .black.opacity(0.08),
+                                            radius: 3,
+                                            y: 1
+                                        )
+                                )
                             }
-                            .foregroundStyle(.primary)
-                            .padding(.horizontal, 12)
-                            .padding(.vertical, 7)
-                            .background(
-                                RoundedRectangle(cornerRadius: 10)
-                                    .fill(Color(.systemBackground))
-                                    .shadow(
-                                        color: .black.opacity(0.08),
-                                        radius: 3,
-                                        y: 1
-                                    )
-                            )
+                            .buttonStyle(.plain)
 
-                            HStack(spacing: 5) {
+                            Button {
+                                isMapView = true
 
-                                Image(systemName: "square.grid.2x2.fill")
-
-                                Text("Map")
+                                mapPosition = .automatic
+                            } label: {
+                                HStack(spacing: 5) {
+                                    Image(systemName: "square.grid.2x2.fill")
+                                    Text("Map")
+                                }
+                                .foregroundStyle(
+                                    isMapView
+                                    ? .primary
+                                    : Color(.systemGray)
+                                )
+                                .padding(.horizontal, 10)
+                                .padding(.vertical, 7)
+                                .background(
+                                    RoundedRectangle(cornerRadius: 10)
+                                        .fill(
+                                            isMapView
+                                            ? Color(.systemBackground)
+                                            : Color.clear
+                                        )
+                                        .shadow(
+                                            color: isMapView
+                                            ? .black.opacity(0.08)
+                                            : .clear,
+                                            radius: 3,
+                                            y: 1
+                                        )
+                                )
                             }
-                            .foregroundStyle(Color(.systemGray))
-                            .padding(.horizontal, 10)
-                            .padding(.vertical, 7)
+                            .buttonStyle(.plain)
                         }
                         .font(.system(size: 14, weight: .semibold))
                         .padding(3)
@@ -93,15 +128,17 @@ struct ExploreScreen: View {
 
                         VStack(alignment: .leading, spacing: 5) {
 
-                            Text("Rice near you")
-                                .font(
-                                    .system(
-                                        size: 28,
-                                        weight: .bold,
-                                        design: .serif
-                                    )
+                            Text(
+                                "\(manager.selectedCraving?.name ?? "Food") near you"
+                            )
+                            .font(
+                                .system(
+                                    size: 28,
+                                    weight: .bold,
+                                    design: .serif
                                 )
-                                .foregroundStyle(.primary)
+                            )
+                            .foregroundStyle(.primary)
 
                             Text("\(manager.places.count) place found")
                                 .font(.system(size: 14))
@@ -139,28 +176,71 @@ struct ExploreScreen: View {
                     .padding(.top, 32)
                     .tint(.primary)
 
-                    // MARK: Place Card
+                    // MARK: Results
 
-                    ForEach(manager.places) { place in
+                    if isMapView {
 
-                        if let restaurant = place as? Restaurant {
+                        Map(position: $mapPosition) {
 
-                            PlaceCard(
-                                imageName: "nasiPadang",
-                                name: restaurant.name,
-                                category: "\(restaurant.category) · \(restaurant.cuisine)",
-                                rating: restaurant.rating.map {
-                                    String(format: "%.1f", $0)
-                                } ?? "-",
-                                reviews: restaurant.reviewCount.map {
-                                    String($0)
-                                } ?? "No reviews",
-                                distance: "\(Int(restaurant.distance)) m",
-                                closingTime: closingTime(
-                                    from: restaurant.openingHours
+                            ForEach(manager.places) { place in
+
+                                if let restaurant = place as? Restaurant {
+
+                                    Marker(
+                                        restaurant.name,
+                                        coordinate: restaurant.coordinate
+                                    )
+                                    .tint(.orange)
+                                }
+                            }
+                        }
+                        .mapStyle(.standard)
+                        .frame(height: 500)
+                        .clipShape(
+                            RoundedRectangle(cornerRadius: 28)
+                        )
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 28)
+                                .stroke(
+                                    Color.black.opacity(0.06),
+                                    lineWidth: 1
                                 )
-                            )
-                            .padding(.top, 22)
+                        )
+                        .shadow(
+                            color: .black.opacity(0.08),
+                            radius: 10,
+                            x: 0,
+                            y: 4
+                        )
+                        .padding(.top, 22)
+
+                    } else {
+
+                        // MARK: Place Card
+
+                        ForEach(manager.places) { place in
+
+                            if let restaurant = place as? Restaurant {
+
+                                PlaceCard(
+                                    imageName: "nasiPadang",
+                                    name: restaurant.name,
+                                    category:
+                                        "\(restaurant.category) · \(restaurant.cuisine)",
+                                    rating: restaurant.rating.map {
+                                        String(format: "%.1f", $0)
+                                    } ?? "-",
+                                    reviews: restaurant.reviewCount.map {
+                                        String($0)
+                                    } ?? "No reviews",
+                                    distance:
+                                        "\(Int(restaurant.distance)) m",
+                                    closingTime: closingTime(
+                                        from: restaurant.openingHours
+                                    )
+                                )
+                                .padding(.top, 22)
+                            }
                         }
                     }
                 }
@@ -188,5 +268,5 @@ struct ExploreScreen: View {
 }
 
 #Preview {
-    ExploreScreen()
+    ExploreScreen(manager: CulinaryManager())
 }
