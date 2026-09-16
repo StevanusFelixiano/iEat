@@ -8,25 +8,38 @@
 import SwiftUI
 
 struct LocationPill: View {
-
     let location: String
+    let isLoading: Bool
+    let action: () -> Void
 
     var body: some View {
-        HStack(spacing: 8) {
+        Button {
+            action()
+        } label: {
+            HStack(spacing: 8) {
+                if isLoading {
+                    ProgressView()
+                        .controlSize(.small)
+                } else {
+                    Image(systemName: "mappin.and.ellipse")
+                        .font(.system(size: 10, weight: .semibold))
+                }
 
-            Image(systemName: "mappin.and.ellipse")
-                .font(.system(size: 10, weight: .semibold))
-                .foregroundStyle(.gray)
-
-            Text(location)
+                Text(
+                    isLoading
+                    ? "Updating location..."
+                    : location
+                )
                 .font(.system(size: 12, weight: .medium))
-                .foregroundStyle(.gray)
+            }
+            .foregroundStyle(.gray)
+            .padding(.horizontal, 16)
+            .padding(.vertical, 10)
+            .background(
+                Capsule()
+                    .fill(Color(.systemGray6))
+            )
         }
-        .padding(.horizontal, 16)
-        .padding(.vertical, 10)
-        .background(
-            Capsule()
-                .fill(Color(.systemGray6))
-        )
+        .buttonStyle(.plain)
     }
 }

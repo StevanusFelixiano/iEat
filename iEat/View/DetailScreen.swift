@@ -9,6 +9,7 @@ import SwiftUI
 import MapKit
 
 struct DetailScreen: View {
+    @Environment(\.colorScheme) private var colorScheme
     @Environment(\.dismiss) private var dismiss
     
     // MARK: - Data
@@ -16,8 +17,12 @@ struct DetailScreen: View {
     
     var body: some View {
         ZStack(alignment: .bottom) {
-            Color(red: 0.98, green: 0.98, blue: 0.97)
-                .ignoresSafeArea()
+            Color(
+                colorScheme == .dark
+                ? Color(red: 0.08, green: 0.08, blue: 0.08)
+                : Color(red: 0.98, green: 0.98, blue: 0.97)
+            )
+            .ignoresSafeArea()
             
             ScrollView(showsIndicators: false) {
                 VStack(spacing: 0) {
@@ -43,7 +48,11 @@ struct DetailScreen: View {
                                 .frame(width: 44, height: 44)
                                 .background(
                                     Circle()
-                                        .fill(.white)
+                                        .fill(
+                                            colorScheme == .dark
+                                            ? Color(.secondarySystemBackground)
+                                            : .white
+                                        )
                                 )
                         }
                         .padding(.top, 56)
@@ -52,7 +61,7 @@ struct DetailScreen: View {
                         
                         // Open Status
                         
-                        StatusBadge(closingTime: closingTime)
+                        StatusBadge(openingHours: place.openingHours)
                             .frame(
                                 maxWidth: .infinity,
                                 alignment: .trailing
@@ -75,11 +84,15 @@ struct DetailScreen: View {
                             .foregroundStyle(.primary)
                             .padding(.leading, 5)
                         
-                        Text("\(place.category) · \(place.cuisine)")
-                            .font(.system(size: 16))
-                            .foregroundStyle(.gray)
-                            .padding(.top, 8)
-                            .padding(.leading, 5)
+                        Text(
+                            place.category
+                            + " · "
+                            + (place.placeType ?? "Place")
+                        )
+                        .font(.system(size: 16))
+                        .foregroundStyle(.gray)
+                        .padding(.top, 8)
+                        .padding(.leading, 5)
                         
                         // Rating
                         
@@ -134,6 +147,26 @@ struct DetailScreen: View {
                             icon: "clock",
                             title: "Hours",
                             value: place.openingHours ?? "Hours unavailable"
+                        )
+                        
+                        Divider()
+                            .padding(.leading, 36)
+                            .padding(.vertical, 14)
+                        
+                        PlaceInfo(
+                            icon: "phone.fill",
+                            title: "Phone",
+                            value: place.phoneNumber ?? "Phone unavailable"
+                        )
+                        
+                        Divider()
+                            .padding(.leading, 36)
+                            .padding(.vertical, 14)
+                        
+                        PlaceInfo(
+                            icon: "globe",
+                            title: "Website",
+                            value: place.websiteURL?.absoluteString ?? "Website unavailable"
                         )
                     }
                     .padding(.horizontal, 24)

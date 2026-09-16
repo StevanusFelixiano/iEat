@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct PlaceCard: View {
-
+    @Environment(\.colorScheme) private var colorScheme
     let imageName: String
     let name: String
     let category: String
@@ -98,7 +98,11 @@ struct PlaceCard: View {
         }
         .background(
             RoundedRectangle(cornerRadius: 28)
-                .fill(Color(.systemBackground))
+                .fill(
+                    colorScheme == .dark
+                    ? Color(.secondarySystemBackground)
+                    : Color(.systemBackground)
+                )
         )
         .clipShape(
             RoundedRectangle(cornerRadius: 28)

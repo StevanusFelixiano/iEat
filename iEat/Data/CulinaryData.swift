@@ -49,6 +49,7 @@ let nasiPadang = Restaurant(
     address: "45 Jalan H. Agus Salim, Sabang",
     distance: 300,
     category: "Rice",
+    placeType: "Restaurant",
     coordinate: CLLocationCoordinate2D(
         latitude: -6.1875,
         longitude: 106.8283
@@ -56,5 +57,7 @@ let nasiPadang = Restaurant(
     cuisine: "Minang",
     rating: 4.6,
     reviewCount: 894,
-    openingHours: "Daily 08:00 – 21:00"
+    phoneNumber: "021-12345678",
+    websiteURL: URL(string: "https://www.nasipadang.com"),
+    openingHours: "Daily 08:00 – 23:00"
 )

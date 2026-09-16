@@ -34,8 +34,11 @@ struct HomeScreen: View {
                         // MARK: Location
 
                         LocationPill(
-                            location: manager.locationName
-                        )
+                            location: manager.locationName,
+                            isLoading: manager.isRefreshingLocation
+                        ) {
+                            manager.refreshLocation()
+                        }
                         .padding(.top, 20)
                         .padding(.leading, 10)
 

@@ -8,18 +8,41 @@
 import SwiftUI
 
 struct FilterSheet: View {
-    
-    @Environment(\.dismiss) private var dismiss
-    
-    @State private var selectedDistance = "5 km"
-    @State private var selectedRating = "Any"
-    @State private var openNow = false
+    @State private var currentDistance: String
+    @State private var currentRating: String
+    @State private var currentOpenNow: Bool
+
     let onDismiss: () -> Void
     let onApply: (
         String,
         String,
         Bool
     ) -> Void
+
+    init(
+        selectedDistance: String,
+        selectedRating: String,
+        openNow: Bool,
+        onDismiss: @escaping () -> Void,
+        onApply: @escaping (
+            String,
+            String,
+            Bool
+        ) -> Void
+    ) {
+        _currentDistance = State(
+            initialValue: selectedDistance
+        )
+        _currentRating = State(
+            initialValue: selectedRating
+        )
+        _currentOpenNow = State(
+            initialValue: openNow
+        )
+
+        self.onDismiss = onDismiss
+        self.onApply = onApply
+    }
     
     private let distances = [
         "1 km",
@@ -98,9 +121,9 @@ struct FilterSheet: View {
                             
                             FilterChip(
                                 title: distance,
-                                isSelected: selectedDistance == distance
+                                isSelected: currentDistance == distance
                             ) {
-                                selectedDistance = distance
+                                currentDistance = distance
                             }
                         }
                     }
@@ -124,9 +147,9 @@ struct FilterSheet: View {
                             
                             FilterChip(
                                 title: rating,
-                                isSelected: selectedRating == rating
+                                isSelected: currentRating == rating
                             ) {
-                                selectedRating = rating
+                                currentRating = rating
                             }
                         }
                     }
@@ -154,7 +177,7 @@ struct FilterSheet: View {
                         
                         Spacer()
                         
-                        Toggle("", isOn: $openNow)
+                        Toggle("", isOn: $currentOpenNow)
                             .labelsHidden()
                             .tint(.orange)
                     }
@@ -166,9 +189,9 @@ struct FilterSheet: View {
                     Button {
                         
                         onApply(
-                            selectedDistance,
-                            selectedRating,
-                            openNow
+                            currentDistance,
+                            currentRating,
+                            currentOpenNow
                         )
                         
                     } label: {
@@ -311,6 +334,9 @@ struct FilterChip: View {
 
 #Preview {
     FilterSheet(
+        selectedDistance: "5 km",
+        selectedRating: "Any",
+        openNow: false,
         onDismiss: {
             print("Dismiss")
         },

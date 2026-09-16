@@ -16,9 +16,11 @@ struct ExploreScreen: View {
     @State private var filterOffset: CGFloat = 560
     @State private var isMapView = false
     @State private var mapPosition: MapCameraPosition = .automatic
+    @State private var selectedPlaceID: UUID?
+    @State private var selectedRestaurant: Restaurant?
     
     var body: some View {
-        ZStack {
+        ZStack(alignment: .top) {
             // MARK: - Main Explore Content
             
             Color(.systemBackground)
@@ -83,7 +85,18 @@ struct ExploreScreen: View {
                             
                             Button {
                                 isMapView = true
-                                mapPosition = .automatic
+                                if let restaurant = manager.places.first as? Restaurant {
+                                    selectedRestaurant = restaurant
+                                    selectedPlaceID = restaurant.id
+                                    
+                                    mapPosition = .region(
+                                        MKCoordinateRegion(
+                                            center: restaurant.coordinate,
+                                            latitudinalMeters: 1200,
+                                            longitudinalMeters: 1200
+                                        )
+                                    )
+                                }
                             } label: {
                                 HStack(spacing: 5) {
                                     Image(systemName: "square.grid.2x2.fill")
@@ -151,7 +164,7 @@ struct ExploreScreen: View {
                         Button {
                             filterOffset = 560
                             showFilters = true
-
+                            
                             withAnimation(.linear(duration: 0.2)) {
                                 filterOffset = 0
                             }
@@ -182,7 +195,7 @@ struct ExploreScreen: View {
                     
                     if isMapView {
                         ZStack(alignment: .bottom) {
-                            Map(position: $mapPosition) {
+                            Map(position: $mapPosition, selection: $selectedPlaceID) {
                                 ForEach(manager.places) { place in
                                     if let restaurant = place as? Restaurant {
                                         Marker(
@@ -190,11 +203,12 @@ struct ExploreScreen: View {
                                             coordinate: restaurant.coordinate
                                         )
                                         .tint(.orange)
+                                        .tag(restaurant.id)
                                     }
                                 }
                             }
                             .mapStyle(.standard)
-                            .frame(height: 500)
+                            .frame(height: 600)
                             .clipShape(
                                 RoundedRectangle(cornerRadius: 28)
                             )
@@ -211,41 +225,54 @@ struct ExploreScreen: View {
                                 x: 0,
                                 y: 4
                             )
-
-                            if let restaurant = manager.places.first as? Restaurant {
-                                MapPlaceCard(
-                                    restaurant: restaurant,
-                                    closingTime: closingTime(
-                                        from: restaurant.openingHours
+                            
+                            if let restaurant = selectedRestaurant {
+                                NavigationLink {
+                                    DetailScreen(place: restaurant)
+                                } label: {
+                                    MapPlaceCard(
+                                        restaurant: restaurant,
+                                        closingTime: closingTime(
+                                            from: restaurant.openingHours
+                                        )
                                     )
-                                )
+                                }
+                                .buttonStyle(.plain)
                                 .padding(.horizontal, 12)
                                 .padding(.bottom, 12)
                             }
                         }
                         .padding(.top, 22)
+                        
                     } else {
                         // MARK: Place Card
                         
                         ForEach(manager.places) { place in
                             if let restaurant = place as? Restaurant {
-                                PlaceCard(
-                                    imageName: "nasiPadang",
-                                    name: restaurant.name,
-                                    category:
-                                        "\(restaurant.category) · \(restaurant.cuisine)",
-                                    rating: restaurant.rating.map {
-                                        String(format: "%.1f", $0)
-                                    } ?? "-",
-                                    reviews: restaurant.reviewCount.map {
-                                        String($0)
-                                    } ?? "No reviews",
-                                    distance:
-                                        "\(Int(restaurant.distance)) m",
-                                    closingTime: closingTime(
-                                        from: restaurant.openingHours
+                                NavigationLink {
+                                    DetailScreen(place: restaurant)
+                                } label: {
+                                    PlaceCard(
+                                        imageName: "nasiPadang",
+                                        name: restaurant.name,
+                                        category:
+                                            restaurant.category
+                                        + " · "
+                                        + (restaurant.placeType ?? "Place"),
+                                        rating: restaurant.rating.map {
+                                            String(format: "%.1f", $0)
+                                        } ?? "-",
+                                        reviews: restaurant.reviewCount.map {
+                                            String($0)
+                                        } ?? "No reviews",
+                                        distance:
+                                            "\(Int(restaurant.distance)) m",
+                                        closingTime: closingTime(
+                                            from: restaurant.openingHours
+                                        )
                                     )
-                                )
+                                }
+                                .buttonStyle(.plain)
                                 .padding(.top, 22)
                             }
                         }
@@ -254,7 +281,16 @@ struct ExploreScreen: View {
                 .padding(.horizontal, 24)
                 .padding(.top, 18)
             }
-            
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+            .padding(.top, isMapView ? -54 : 0)
+            .scrollDisabled(isMapView)
+            .onChange(of: selectedPlaceID) { _, newValue in
+                guard let newValue else { return }
+                
+                selectedRestaurant = manager.places
+                    .compactMap { $0 as? Restaurant }
+                    .first { $0.id == newValue }
+            }
             // MARK: Custom Filter Sheet
             
             if showFilters {
@@ -277,7 +313,7 @@ struct ExploreScreen: View {
                     withAnimation(.linear(duration: 0.2)) {
                         filterOffset = 560
                     }
-
+                    
                     DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
                         showFilters = false
                     }
@@ -288,11 +324,14 @@ struct ExploreScreen: View {
                 Spacer()
                 
                 FilterSheet(
+                    selectedDistance: distanceText(from: manager.selectedDistance),
+                    selectedRating: ratingText(from: manager.selectedRating),
+                    openNow: manager.openNow,
                     onDismiss: {
                         withAnimation(.linear(duration: 0.2)) {
                             filterOffset = 560
                         }
-
+                        
                         DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
                             showFilters = false
                         }
@@ -322,7 +361,21 @@ struct ExploreScreen: View {
     }
     
     // MARK: - Helper
-    
+    private func distanceText(from value: Double) -> String {
+        "\(Int(value)) km"
+    }
+
+    private func ratingText(from value: Double?) -> String {
+        guard let value else {
+            return "Any"
+        }
+
+        if value == floor(value) {
+            return "\(Int(value))+"
+        }
+
+        return "\(value)+"
+    }
     private func closingTime(from openingHours: String?) -> String {
         guard let openingHours else {
             return "Hours unavailable"

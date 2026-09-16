@@ -23,6 +23,7 @@ final class CulinaryManager: NSObject, ObservableObject {
     @Published var isSearching = false
     @Published var errorMessage: String?
     @Published var locationName = "Finding location..."
+    @Published var isRefreshingLocation = false
 
     private let locationManager = CLLocationManager()
 
@@ -31,9 +32,9 @@ final class CulinaryManager: NSObject, ObservableObject {
 
     // MARK: - Active Filters
 
-    private var selectedDistance: Double = 5
-    private var selectedRating: Double? = nil
-    private var openNow = false
+    @Published var selectedDistance: Double = 5
+    @Published var selectedRating: Double? = nil
+    @Published var openNow = false
 
     override init() {
         super.init()
@@ -64,7 +65,7 @@ final class CulinaryManager: NSObject, ObservableObject {
     }
 
     func refreshLocation() {
-
+        isRefreshingLocation = true
         hasReceivedLocation = false
         locationManager.startUpdatingLocation()
     }
@@ -112,12 +113,18 @@ final class CulinaryManager: NSObject, ObservableObject {
 
                 await MainActor.run {
                     self.locationName = locationName
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) {
+                            self.isRefreshingLocation = false
+                        }
                 }
 
             } catch {
 
                 await MainActor.run {
                     self.locationName = "Location unavailable"
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) {
+                            self.isRefreshingLocation = false
+                        }
                 }
             }
         }
@@ -126,8 +133,13 @@ final class CulinaryManager: NSObject, ObservableObject {
     // MARK: - Craving
 
     func selectCraving(_ craving: FoodPreference) {
-
         selectedCraving = craving
+
+        // Reset filters for the new craving
+        selectedDistance = 5
+        selectedRating = nil
+        openNow = false
+
         searchPlaces(for: craving)
     }
 
@@ -383,19 +395,39 @@ final class CulinaryManager: NSObject, ObservableObject {
                 )
             ?? item.address?.fullAddress
             ?? "Address unavailable"
+        
+        let placeType = placeTypeName(
+            from: item.pointOfInterestCategory
+        )
 
         return Restaurant(
             name: name,
             address: address,
             distance: distance,
             category: craving.name,
+            placeType: placeType,
             coordinate: coordinate,
             cuisine: "Nearby",
             phoneNumber: item.phoneNumber,
             websiteURL: item.url
         )
     }
-
+    
+    private func placeTypeName(
+        from category: MKPointOfInterestCategory?
+    ) -> String {
+        switch category {
+        case .restaurant:
+            return "Restaurant"
+        case .cafe:
+            return "Cafe"
+        case .bakery:
+            return "Bakery"
+        default:
+            return "Place"
+        }
+    }
+    
     // MARK: - Distance
 
     private func distanceBetween(

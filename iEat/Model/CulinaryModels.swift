@@ -26,6 +26,7 @@ class Place: Identifiable {
     let address: String
     let distance: Double
     let category: String
+    let placeType: String?
     let coordinate: CLLocationCoordinate2D
 
     // MARK: Optional Values
@@ -41,6 +42,7 @@ class Place: Identifiable {
         address: String,
         distance: Double,
         category: String,
+        placeType: String,
         coordinate: CLLocationCoordinate2D,
         rating: Double? = nil,
         reviewCount: Int? = nil,
@@ -52,6 +54,7 @@ class Place: Identifiable {
         self.address = address
         self.distance = distance
         self.category = category
+        self.placeType = placeType
         self.coordinate = coordinate
         self.rating = rating
         self.reviewCount = reviewCount
@@ -71,6 +74,7 @@ class Restaurant: Place {
         address: String,
         distance: Double,
         category: String,
+        placeType: String,
         coordinate: CLLocationCoordinate2D,
         cuisine: String,
         rating: Double? = nil,
@@ -86,6 +90,7 @@ class Restaurant: Place {
             address: address,
             distance: distance,
             category: category,
+            placeType: placeType,
             coordinate: coordinate,
             rating: rating,
             reviewCount: reviewCount,
