@@ -8,19 +8,19 @@
 import SwiftUI
 
 struct FilterSheet: View {
-
+    
     @Environment(\.dismiss) private var dismiss
-
+    
     @State private var selectedDistance = "5 km"
     @State private var selectedRating = "Any"
     @State private var openNow = false
-
+    let onDismiss: () -> Void
     let onApply: (
         String,
         String,
         Bool
     ) -> Void
-
+    
     private let distances = [
         "1 km",
         "2 km",
@@ -28,7 +28,7 @@ struct FilterSheet: View {
         "10 km",
         "20 km"
     ]
-
+    
     private let ratings = [
         "Any",
         "3+",
@@ -36,59 +36,66 @@ struct FilterSheet: View {
         "4+",
         "4.5+"
     ]
-
+    
     var body: some View {
-
+        
         VStack(spacing: 0) {
-
+            Capsule()
+                .fill(Color(.systemGray3))
+                .frame(width: 44, height: 5)
             // MARK: Header
-
+            
             HStack {
-
+                
                 Text("Filters")
                     .font(
                         .system(
-                            size: 32,
+                            size: 24,
                             weight: .bold,
                             design: .serif
                         )
                     )
-
+                
                 Spacer()
-
+                
                 Button {
-                    dismiss()
+                    onDismiss()
                 } label: {
-
+                    
                     Image(systemName: "xmark")
                         .font(.system(size: 16, weight: .semibold))
                         .foregroundStyle(.primary)
-                        .frame(width: 48, height: 48)
+                        .frame(width: 40, height: 40)
                         .background(
                             Circle()
                                 .fill(Color(.systemGray6))
                         )
                 }
+                .tint(.primary)
             }
-
+            .padding(.top, 18)
+            
             Divider()
-                .padding(.top, 22)
-
+                .frame(height: 1)
+                .background(Color(.systemGray4))
+                .padding(.top, 16)
+            
+            
             ScrollView(showsIndicators: false) {
-
+                
                 VStack(alignment: .leading, spacing: 0) {
-
+                    
                     // MARK: Distance
-
+                    
                     Text("DISTANCE")
-                        .font(.system(size: 20, weight: .semibold))
+                        .font(.system(size: 16, weight: .semibold))
                         .foregroundStyle(.gray)
-                        .padding(.top, 36)
-
+                        .padding(.top, 24)
+                    
                     FlowLayout(spacing: 12) {
-
+                        
                         ForEach(distances, id: \.self) { distance in
-
+                            
                             FilterChip(
                                 title: distance,
                                 isSelected: selectedDistance == distance
@@ -97,22 +104,24 @@ struct FilterSheet: View {
                             }
                         }
                     }
-                    .padding(.top, 20)
-
+                    .padding(.top, 16)
+                    
                     Divider()
-                        .padding(.top, 30)
-
+                        .frame(height: 1)
+                        .background(Color(.systemGray4))
+                        .padding(.top, 24)
+                    
                     // MARK: Rating
-
+                    
                     Text("MINIMUM RATING")
-                        .font(.system(size: 20, weight: .semibold))
+                        .font(.system(size: 16, weight: .semibold))
                         .foregroundStyle(.gray)
-                        .padding(.top, 36)
-
+                        .padding(.top, 24)
+                    
                     FlowLayout(spacing: 12) {
-
+                        
                         ForEach(ratings, id: \.self) { rating in
-
+                            
                             FilterChip(
                                 title: rating,
                                 isSelected: selectedRating == rating
@@ -121,58 +130,60 @@ struct FilterSheet: View {
                             }
                         }
                     }
-                    .padding(.top, 20)
-
+                    .padding(.top, 16)
+                    
                     Divider()
-                        .padding(.top, 30)
-
+                        .frame(height: 1)
+                        .background(Color(.systemGray4))
+                        .padding(.top, 24)
+                    
                     // MARK: Open Now
-
+                    
                     HStack {
-
+                        
                         VStack(alignment: .leading, spacing: 5) {
-
+                            
                             Text("Open Now")
-                                .font(.system(size: 24, weight: .regular))
+                                .font(.system(size: 16, weight: .regular))
                                 .foregroundStyle(.primary)
-
+                            
                             Text("Show only currently open places")
-                                .font(.system(size: 18))
+                                .font(.system(size: 14))
                                 .foregroundStyle(.gray)
                         }
-
+                        
                         Spacer()
-
+                        
                         Toggle("", isOn: $openNow)
                             .labelsHidden()
                             .tint(.orange)
                     }
                     .padding(.top, 32)
-
+                    .padding(.trailing, 24)
+                    
                     // MARK: Apply
-
+                    
                     Button {
-
+                        
                         onApply(
                             selectedDistance,
                             selectedRating,
                             openNow
                         )
-
-                        dismiss()
-
+                        
                     } label: {
-
+                        
                         Text("Apply Filters")
-                            .font(.system(size: 20, weight: .semibold))
+                            .font(.system(size: 16, weight: .semibold))
                             .foregroundStyle(.white)
-                            .frame(maxWidth: .infinity)
-                            .frame(height: 64)
+                            .frame(width: 360)
+                            .frame(height: 44)
                             .background(
                                 RoundedRectangle(cornerRadius: 24)
                                     .fill(Color.orange)
                             )
                     }
+                    .frame(maxWidth: .infinity, alignment: .center)
                     .padding(.top, 36)
                     .padding(.bottom, 20)
                 }
@@ -180,72 +191,73 @@ struct FilterSheet: View {
         }
         .padding(.horizontal, 21)
         .padding(.top, 8)
+        .background(Color(.systemBackground))
     }
 }
 
 struct FlowLayout: Layout {
-
+    
     var spacing: CGFloat = 12
-
+    
     func sizeThatFits(
         proposal: ProposedViewSize,
         subviews: Subviews,
         cache: inout ()
     ) -> CGSize {
-
+        
         let maxWidth = proposal.width ?? .infinity
-
+        
         var width: CGFloat = 0
         var height: CGFloat = 0
         var rowHeight: CGFloat = 0
-
+        
         for subview in subviews {
-
+            
             let size = subview.sizeThatFits(
                 ProposedViewSize(width: maxWidth, height: nil)
             )
-
+            
             if width + size.width > maxWidth {
                 width = 0
                 height += rowHeight + spacing
                 rowHeight = 0
             }
-
+            
             width += size.width + spacing
             rowHeight = max(rowHeight, size.height)
         }
-
+        
         height += rowHeight
-
+        
         return CGSize(
             width: maxWidth,
             height: height
         )
     }
-
+    
     func placeSubviews(
         in bounds: CGRect,
         proposal: ProposedViewSize,
         subviews: Subviews,
         cache: inout ()
     ) {
-
+        
         var x = bounds.minX
         var y = bounds.minY
         var rowHeight: CGFloat = 0
-
+        
         for subview in subviews {
-
+            
             let size = subview.sizeThatFits(
                 ProposedViewSize(width: bounds.width, height: nil)
             )
-
+            
             if x + size.width > bounds.maxX {
                 x = bounds.minX
                 y += rowHeight + spacing
                 rowHeight = 0
             }
-
+            
             subview.place(
                 at: CGPoint(
                     x: x,
@@ -256,7 +268,7 @@ struct FlowLayout: Layout {
                     height: size.height
                 )
             )
-
+            
             x += size.width + spacing
             rowHeight = max(rowHeight, size.height)
         }
@@ -264,26 +276,26 @@ struct FlowLayout: Layout {
 }
 
 struct FilterChip: View {
-
+    
     let title: String
     let isSelected: Bool
     let action: () -> Void
-
+    
     var body: some View {
-
+        
         Button {
             action()
         } label: {
-
+            
             Text(title)
-                .font(.system(size: 18, weight: .medium))
+                .font(.system(size: 14, weight: .medium))
                 .foregroundStyle(
                     isSelected
                     ? .white
                     : .primary
                 )
-                .padding(.horizontal, 24)
-                .frame(height: 56)
+                .padding(.horizontal, 14)
+                .frame(height: 36)
                 .background(
                     Capsule()
                         .fill(
@@ -295,4 +307,21 @@ struct FilterChip: View {
         }
         .buttonStyle(.plain)
     }
+}
+
+#Preview {
+    FilterSheet(
+        onDismiss: {
+            print("Dismiss")
+        },
+        onApply: { distance, rating, openNow in
+            print("Distance:", distance)
+            print("Rating:", rating)
+            print("Open Now:", openNow)
+        }
+    )
+    .frame(width: 393, height: 500)
+    .clipShape(
+        RoundedRectangle(cornerRadius: 28)
+    )
 }

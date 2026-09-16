@@ -8,26 +8,26 @@
 import SwiftUI
 
 struct CravingCard: View {
-
+    @Environment(\.colorScheme) private var colorScheme
     let emoji: String
     let title: String
     let action: () -> Void
-
+    
     var body: some View {
-
+        
         Button {
             action()
         } label: {
-
+            
             VStack(alignment: .leading, spacing: 0) {
-
+                
                 Text(emoji)
                     .font(.system(size: 36))
                     .frame(height: 65)
                     .padding(.bottom, -10)
-
+                
                 Spacer()
-
+                
                 Text(title)
                     .font(.system(size: 20, weight: .semibold))
                     .foregroundStyle(.primary)
@@ -39,7 +39,11 @@ struct CravingCard: View {
             .padding(.vertical, 20)
             .background(
                 RoundedRectangle(cornerRadius: 28)
-                    .fill(Color(.systemBackground))
+                    .fill(
+                        colorScheme == .dark
+                        ? Color(.secondarySystemBackground)
+                        : Color(.systemBackground)
+                    )
                     .shadow(
                         color: .black.opacity(0.07),
                         radius: 12,

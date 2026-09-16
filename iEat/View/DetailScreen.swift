@@ -6,44 +6,37 @@
 //
 
 import SwiftUI
+import MapKit
 
 struct DetailScreen: View {
-
     @Environment(\.dismiss) private var dismiss
-
-    // Data comes from the model
-    let place = nasiPadang
-
+    
+    // MARK: - Data
+    let place: Restaurant
+    
     var body: some View {
-
         ZStack(alignment: .bottom) {
-
             Color(red: 0.98, green: 0.98, blue: 0.97)
                 .ignoresSafeArea()
-
+            
             ScrollView(showsIndicators: false) {
-
                 VStack(spacing: 0) {
-
+                    
                     // MARK: Hero Image
-
+                    
                     ZStack(alignment: .topLeading) {
-
                         Image("nasiPadang")
                             .resizable()
                             .scaledToFill()
                             .frame(height: 300)
                             .frame(maxWidth: .infinity)
                             .clipped()
-
+                        
                         // Back Button
-
+                        
                         Button {
-
                             dismiss()
-
                         } label: {
-
                             Image(systemName: "chevron.left")
                                 .font(.system(size: 16, weight: .medium))
                                 .foregroundStyle(.primary)
@@ -56,9 +49,9 @@ struct DetailScreen: View {
                         .padding(.top, 56)
                         .padding(.leading, 40)
                         .tint(.primary)
-
+                        
                         // Open Status
-
+                        
                         StatusBadge(closingTime: closingTime)
                             .frame(
                                 maxWidth: .infinity,
@@ -67,11 +60,10 @@ struct DetailScreen: View {
                             .padding(.top, 243)
                             .padding(.trailing, 40)
                     }
-
+                    
                     // MARK: Main Information
-
+                    
                     VStack(alignment: .leading, spacing: 0) {
-
                         Text(place.name)
                             .font(
                                 .system(
@@ -82,30 +74,29 @@ struct DetailScreen: View {
                             )
                             .foregroundStyle(.primary)
                             .padding(.leading, 5)
-
+                        
                         Text("\(place.category) · \(place.cuisine)")
                             .font(.system(size: 16))
                             .foregroundStyle(.gray)
                             .padding(.top, 8)
                             .padding(.leading, 5)
-
+                        
                         // Rating
-
+                        
                         RatingView(
                             rating: place.rating,
                             reviewCount: place.reviewCount
                         )
                         .padding(.top, 16)
                         .padding(.leading, 5)
-
+                        
                         // Distance
-
+                        
                         HStack(spacing: 9) {
-
                             Image(systemName: "mappin.and.ellipse")
                                 .font(.system(size: 14))
                                 .foregroundStyle(Color(.gray))
-
+                            
                             Text("\(Int(place.distance)) m away")
                                 .font(.system(size: 16))
                                 .foregroundStyle(Color(.gray))
@@ -120,25 +111,25 @@ struct DetailScreen: View {
                         RoundedRectangle(cornerRadius: 30)
                             .fill(Color(.systemBackground))
                     )
-
+                    
                     // MARK: Place Information
-
+                    
                     VStack(spacing: 0) {
-
+                        
                         // Address
-
+                        
                         PlaceInfo(
                             icon: "mappin.circle.fill",
                             title: "Address",
                             value: place.address
                         )
-
+                        
                         Divider()
                             .padding(.leading, 36)
                             .padding(.vertical, 14)
-
+                        
                         // Hours
-
+                        
                         PlaceInfo(
                             icon: "clock",
                             title: "Hours",
@@ -159,77 +150,25 @@ struct DetailScreen: View {
                     )
                     .padding(.horizontal, 44)
                     .padding(.top, 20)
-
+                    
                     // MARK: Map Preview
-
-                    ZStack {
-
-                        // Simple map background
-
-                        Color(red: 0.82, green: 0.87, blue: 0.76)
-
-                        // Roads
-
-                        Path { path in
-
-                            // Vertical roads
-
-                            path.move(to: CGPoint(x: 70, y: 0))
-                            path.addLine(to: CGPoint(x: 70, y: 230))
-
-                            path.move(to: CGPoint(x: 140, y: 0))
-                            path.addLine(to: CGPoint(x: 140, y: 230))
-
-                            path.move(to: CGPoint(x: 210, y: 0))
-                            path.addLine(to: CGPoint(x: 210, y: 230))
-
-                            path.move(to: CGPoint(x: 280, y: 0))
-                            path.addLine(to: CGPoint(x: 280, y: 230))
-
-                            path.move(to: CGPoint(x: 358, y: 0))
-                            path.addLine(to: CGPoint(x: 358, y: 230))
-
-                            // Horizontal roads
-
-                            path.move(to: CGPoint(x: 0, y: 45))
-                            path.addLine(to: CGPoint(x: 360, y: 45))
-
-                            path.move(to: CGPoint(x: 0, y: 90))
-                            path.addLine(to: CGPoint(x: 360, y: 90))
-
-                            path.move(to: CGPoint(x: 0, y: 135))
-                            path.addLine(to: CGPoint(x: 360, y: 135))
-
-                            path.move(to: CGPoint(x: 0, y: 180))
-                            path.addLine(to: CGPoint(x: 360, y: 180))
-
-                            path.move(to: CGPoint(x: 0, y: 225))
-                            path.addLine(to: CGPoint(x: 360, y: 225))
-                        }
-                        .stroke(
-                            Color.white.opacity(0.95),
-                            lineWidth: 4
+                    
+                    Map(
+                        initialPosition: .region(
+                            MKCoordinateRegion(
+                                center: place.coordinate,
+                                latitudinalMeters: 800,
+                                longitudinalMeters: 800
+                            )
                         )
-
-                        // Place label
-
-                        VStack(spacing: 4) {
-
-                            Text(place.name)
-                                .font(.system(size: 14, weight: .bold))
-                                .foregroundStyle(.white)
-                                .padding(.horizontal, 17)
-                                .padding(.vertical, 11)
-                                .background(
-                                    Capsule()
-                                        .fill(Color.orange)
-                                )
-
-                            Circle()
-                                .fill(Color.orange)
-                                .frame(width: 12, height: 12)
-                        }
+                    ) {
+                        Marker(
+                            place.name,
+                            coordinate: place.coordinate
+                        )
+                        .tint(.orange)
                     }
+                    .mapStyle(.standard)
                     .frame(height: 180)
                     .clipShape(
                         RoundedRectangle(cornerRadius: 24)
@@ -249,27 +188,23 @@ struct DetailScreen: View {
                     )
                     .padding(.horizontal, 44)
                     .padding(.top, 20)
-
+                    
                     // Extra space for bottom button
-
+                    
                     Color.clear
                         .frame(height: 100)
                 }
             }
-
+            
             // MARK: Directions Button
-
+            
             Button {
-
-                // Open Maps
-
+                openDirections()
             } label: {
-
                 HStack(spacing: 12) {
-
                     Image(systemName: "arrow.right")
                         .font(.system(size: 22, weight: .medium))
-
+                    
                     Text("Get Directions")
                         .font(.system(size: 21, weight: .semibold))
                 }
@@ -287,23 +222,41 @@ struct DetailScreen: View {
         .ignoresSafeArea(edges: .top)
         .navigationBarBackButtonHidden(true)
     }
-
+    
     // MARK: - Computed Property
-
+    
     private var closingTime: String {
-
         guard let openingHours = place.openingHours else {
             return "Hours unavailable"
         }
-
+        
         if let closingTime = openingHours.split(separator: "–").last {
             return "Closes \(closingTime.trimmingCharacters(in: .whitespaces))"
         }
-
+        
         return "Hours unavailable"
+    }
+    
+    private func openDirections() {
+        let destination = MKMapItem(
+            location: CLLocation(
+                latitude: place.coordinate.latitude,
+                longitude: place.coordinate.longitude
+            ),
+            address: nil
+        )
+        
+        destination.name = place.name
+        
+        destination.openInMaps(
+            launchOptions: [
+                MKLaunchOptionsDirectionsModeKey:
+                    MKLaunchOptionsDirectionsModeDefault
+            ]
+        )
     }
 }
 
 #Preview {
-    DetailScreen()
+    DetailScreen(place: nasiPadang)
 }
